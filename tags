@@ -1,0 +1,23 @@
+!_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
+AddNode	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def AddNode(V,e):$/;"	f	language:Python
+allow_self_edges	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^allow_self_edges = False  # if true, a node can have an edge to itself$/;"	v	language:Python
+do_xform	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^do_xform = True # Sachin: Remove isolated nodes from Graphs$/;"	v	language:Python
+edge_comparator	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^bool edge_comparator(pair<int, int> edge1, pair<int, int> edge2)$/;"	f	language:C++
+edge_search	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^bool edge_search(vector<pair<int, int>> &edges, pair<int, int> &query_edge, int start, int end)$/;"	f	language:C++
+G1edges	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^G1edges = int(sys.argv[2]) # number of edges in larger graph$/;"	v	language:Python
+G1nodes	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^G1nodes = int(sys.argv[1]) # number of nodes in larger graph$/;"	v	language:Python
+G2edges	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^G2edges = int(sys.argv[4]) # number of edges in smaller graph$/;"	v	language:Python
+G2nodes	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^G2nodes = int(sys.argv[3]) # number of nodes in smaller graph$/;"	v	language:Python
+guarantee_subgraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^guarantee_subgraph = True  # whether to deliberately make G2 a subgraph of G1$/;"	v	language:Python
+main	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^int main(int argc, char *argv[])$/;"	f	language:C++
+main	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def main():$/;"	f	language:Python
+makeGraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def makeGraph(nodeCount, edgeCount):$/;"	f	language:Python
+makeSuperGraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def makeSuperGraph(G1nodes,G1edges,G2nodes,G2edges,G2):$/;"	f	language:Python
+permutation	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^int permutation(int n, int k)$/;"	f	language:C++
+printDigraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def printDigraph():$/;"	f	language:Python
+printGraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def printGraph(edges):$/;"	f	language:Python
+printSubgraphs	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def printSubgraphs(G1,G2):$/;"	f	language:Python
+print_digraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^print_digraph = False # if True, print in graphviz format for visualization$/;"	v	language:Python
+renameGraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def renameGraph(N, Graph):$/;"	f	language:Python
+ReplaceNode	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def ReplaceNode(G,n,n2):$/;"	f	language:Python
+xform	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^def xform(G):$/;"	f	language:Python
