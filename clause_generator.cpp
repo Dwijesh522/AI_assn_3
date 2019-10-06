@@ -8,6 +8,7 @@
 #include<algorithm>
 using namespace std;
 
+typedef enum {EMAIL, CALL, MAPPING} literal_type;
 // calculate npk
 int permutation(int n, int k)
 {
@@ -51,6 +52,64 @@ bool edge_search(vector<pair<int, int>> &edges, pair<int, int> &query_edge, int 
 	if(curr_destination > query_destination)	return edge_search(edges, query_edge, start, middle-1);
 	// destinations are also the same
 	return true;
+}
+
+// returns all possible combination of numbers of selection size starting from index "offset"
+void get_combinations(vector<int> &numbers, int selection_size, int offset, vector<vector<int>> &combinations, vector<int> temp_combination)
+{
+	if(selection_size == 0)
+	{
+		combinations.push_back(temp_combination);
+		return;	
+	}
+	int digits = numbers.size();
+	for(int i=offset; i<=digits-selection_size; i++)
+	{
+		temp_combination.push_back(numbers[i]);
+		get_combinations(numbers, selection_size-1, i+1, combinations, temp_combination);
+		temp_combination.pop_back();
+	}
+}
+
+// returns corresponding key value for a given edge, graph sizes, literal type
+int edge_to_key(int r, int c, int &email_node_size, int &call_node_size, literal_type l_type)
+{
+	switch(l_type)
+	{
+		case EMAIL:
+			if(c<r)		return r*email_node_size+ (c+1) - r;
+			else		return r*email_node_size+ (c+1) - r - 1;
+			break;
+		case CALL:
+			if(c<r)		return email_node_size*(email_node_size-1) + r*call_node_size+ (c+1) - r;
+			else		return email_node_size*(email_node_size-1) + r*call_node_size+ (c+1) - r - 1;
+			break;
+		case MAPPING:
+			if(c<r)		return call_node_size*(call_node_size-1) + email_node_size*(email_node_size-1) + r*call_node_size+ (c+1);
+			else		return call_node_size*(call_node_size-1) + email_node_size*(email_node_size-1) + r*call_node_size+ (c+1);
+			break;
+	}
+}
+
+pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size, literal_type l_type)
+{
+	switch(l_type)
+	{
+		case EMAIL:
+			cout << "*********** not implemented ************\n";
+			return make_pair(-1, -1);
+		case CALL:
+			cout << "*********** not implemented ************\n";
+			return make_pair(-1, -1);
+		case MAPPING:
+			// total number of element in mapping matrix
+			int element_index = key - (email_node_size*(email_node_size-1) + call_node_size*(call_node_size-1));
+			// zero based indexing
+			int r, c;
+			c = (element_index-1) % call_node_size;
+			r = (element_index-c-1) / call_node_size;
+			return make_pair(r+1, c+1);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -142,8 +201,14 @@ int main(int argc, char *argv[])
 		}
 
 	// printing key and value
-//	for(auto i=variable_to_node.begin(); i!=variable_to_node.end(); i++)
-//		cout << i->first << " -> " << i->second.first << ", " << i->second.second << endl;
+	cout << "key to edge mappings: \n";
+	for(auto i=variable_to_node.begin(); i!=variable_to_node.end(); i++)
+		cout << i->first << " -> " << i->second.first << ", " << i->second.second << endl;
+	// printing edge to key mapping
+//	cout << "edge to key mappings: \n";
+//	for(int i=0; i<email_node_size; i++)
+//		for(int j=0; j<call_node_size; j++)
+//			cout << i+1 << " -> " << j+1 << ": " << edge_to_key(i, j, email_node_size, call_node_size, MAPPING) << endl;
 
 	// sorting email edges and call edges to make search efficient
 	sort(email_edges.begin(), email_edges.end(), edge_comparator);
@@ -162,10 +227,10 @@ int main(int argc, char *argv[])
 	int total_variables = 	(email_node_size*email_node_size - email_node_size) +
 				(call_node_size*call_node_size - call_node_size) +
 				email_node_size*call_node_size,
-	    total_clauses   = 	(email_node_size*(email_node_size-1))+		// fact clauses
-		   		(call_node_size*(call_node_size-1))+		// fact clauses
-				permutation(call_node_size, email_node_size)+	// constraints
-				email_node_size;				// existance
+	    total_clauses   = 	(email_node_size*(email_node_size-1))+										// fact clauses
+		   		(call_node_size*(call_node_size-1))+										// fact clauses
+				((2*email_node_size*email_node_size - 2*email_node_size)*permutation(call_node_size, email_node_size))+		// constraints
+				email_node_size;												// existance
 	string string_to_file="";
 	// writing basic info
 	string_to_file = "p cnf " + to_string(total_variables) + " " + to_string(total_clauses);
@@ -194,8 +259,59 @@ int main(int argc, char *argv[])
 		// constraint edges: mappings(mij)
 		else	break;
 	}
+	//adding existence clause to satinput
+	int temp=(email_node_size*email_node_size - email_node_size) + (call_node_size*call_node_size - call_node_size), count=0;
+	for(int i=temp;i<variable_to_node.size();i++)
+	{
+		if(count<call_node_size)
+		{
+			satinput<<to_string(i+1)+" ";
+			count++;
+		}
+		else
+		{
+			count=0;
+			satinput<<"0\n";
+			i--;
+		}
+	}
+	satinput<<"0\n";	
 	//// writing constraints clauses.
+	// creating vector of int: node id of graphs
+	// both vectors are already in sorted order: increasing node ids
+	// also all elements are unique
+	vector<int> email_nodes, call_nodes;
+	for(int i=0; i<email_node_size; i++)	email_nodes.push_back(i+1);
+	for(int i=0; i<call_node_size; i++)	call_nodes.push_back(i+1);
 	
+	// selecting n elements out of m elements. n < m. mcn combinations.
+	vector<vector<int>> valid_mappings;
+	vector<int> temp_combination;
+	get_combinations(call_nodes, email_node_size, 0, valid_mappings, temp_combination);
+	int valid_mappings_size = valid_mappings.size();
+	for(int i=0; i<valid_mappings_size; i++)
+	{
+		// extracting a permuatation
+		vector<int> a_permutation = valid_mappings[i];
+		// getting subset of mapping
+		do
+		{
+			string base_clause="";
+			// constraint clause for a mapping under consideration
+			for(int j=0; j<email_node_size; j++)
+				base_clause += to_string((-1)*edge_to_key(j, a_permutation[j]-1, email_node_size, call_node_size, MAPPING)) + " ";
+			// temp_counter := number of all possible valid email edges
+			int temp_counter = email_node_size*(email_node_size-1);
+			for(int j=1; j<=temp_counter; j++)
+			{
+				int map_i = variable_to_node.at(j).first, map_j = variable_to_node.at(j).second;
+				int mapped_key = edge_to_key( a_permutation[map_i-1]-1, a_permutation[map_j-1]-1, email_node_size, call_node_size, CALL);
+				satinput << base_clause + to_string((-1)*j) + " " + to_string(mapped_key) + " 0\n";
+				satinput << base_clause + to_string(j) + " " + to_string((-1)*mapped_key) + " 0\n";
+			}
+		}
+		while(next_permutation(a_permutation.begin(), a_permutation.end()));
+	}
 
 	satinput.close();
 	return 0;
