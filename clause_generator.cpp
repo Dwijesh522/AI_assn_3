@@ -173,6 +173,12 @@ int main(int argc, char *argv[])
 	}
 	input_file.close();
 
+	fstream size_file;
+	size_file.open("size.txt", ios::out);
+	if(!size_file)	{ cout << "error while creating file size.txt\n"; return 0;}
+	size_file << email_node_size << endl << call_node_size << endl;
+	size_file.close();
+
 	//// creating map to refer node id wrt the variable index
 	map<int, pair<int, int>> variable_to_node;
 	int offset=1;
