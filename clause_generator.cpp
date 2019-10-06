@@ -55,18 +55,48 @@ bool edge_search(vector<pair<int, int>> &edges, pair<int, int> &query_edge, int 
 }
 
 // returns all possible combination of numbers of selection size starting from index "offset"
-void get_combinations(vector<int> &numbers, int selection_size, int offset, vector<vector<int>> &combinations, vector<int> temp_combination)
+void get_combinations(	vector<int> &numbers, int selection_size, int offset, vector<vector<int>> &combinations, vector<int> temp_combination,
+			int &min_email_degree, int &max_email_degree, map<int, int> &call_node_degree)
 {
 	if(selection_size == 0)
 	{
-		combinations.push_back(temp_combination);
+		//// check if such a combination is feasible or not
+		// getting min and max calling node degrees
+		int min_call_degree = INFINITY, max_call_degree = -INFINITY, email_node_size = temp_combination.size();
+		for(int i=0; i< email_node_size; i++)
+		{
+			auto it = call_node_degree.find(temp_combination[i]);
+			// element is there
+			if(it != call_node_degree.end())
+			{
+				if(it->second > max_call_degree)	max_call_degree = it->second;
+				if(it->second < min_call_degree)	min_call_degree = it->second;
+			}
+			// element is not there
+			else
+			{
+				min_call_degree = 0;
+				if(max_call_degree < 0)			max_call_degree = 0;
+			}
+		}
+		// check redundent clauses
+		if(min_call_degree >= min_email_degree and max_call_degree >= max_email_degree)
+			combinations.push_back(temp_combination);
+		else
+		{
+			cout << "it is helping...\n";
+			cout << "email degrees: " << min_email_degree << ", " << max_email_degree << endl;
+			cout << "call degrees: " << min_call_degree << ", " << max_call_degree << endl;
+			for(int i=0; i<email_node_size; i++)	cout << temp_combination[i];
+			cout << endl;
+		}
 		return;	
 	}
 	int digits = numbers.size();
 	for(int i=offset; i<=digits-selection_size; i++)
 	{
 		temp_combination.push_back(numbers[i]);
-		get_combinations(numbers, selection_size-1, i+1, combinations, temp_combination);
+		get_combinations(numbers, selection_size-1, i+1, combinations, temp_combination, min_email_degree, max_email_degree, call_node_degree);
 		temp_combination.pop_back();
 	}
 }
@@ -130,6 +160,8 @@ int main(int argc, char *argv[])
 	int email_node_size = -INFINITY, call_node_size = -INFINITY;
 	bool zero_crossed=false;
 	vector<pair<int, int>> email_edges, call_edges;
+	// storing degree of each node
+	map<int, int> email_node_degree, call_node_degree;
 
 	while(getline(input_file, edge))
 	{
@@ -153,6 +185,14 @@ int main(int argc, char *argv[])
 				if(int_node2 > call_node_size)		call_node_size = int_node2;
 				// adding edge to call_edges for further use
 				call_edges.push_back(make_pair(int_node1, int_node2));
+				// modifing degree of int_node1
+				auto it = call_node_degree.find(int_node1);
+				// element exists
+				if(it != call_node_degree.end())
+					it->second = (it->second) +1;
+				// element does not exist
+				else
+					call_node_degree.insert(make_pair(int_node1, 1));
 			}
 		}
 		// email edges
@@ -169,10 +209,45 @@ int main(int argc, char *argv[])
 			if(int_node2 > email_node_size)		email_node_size = int_node2;
 			// adding edge to call_edges for further use
 			email_edges.push_back(make_pair(int_node1, int_node2));
+			// modifing degree of int_node1
+			auto it = email_node_degree.find(int_node1);
+			// element exists
+			if(it != email_node_degree.end())
+				it->second = (it->second) +1;
+			// element does not exist
+			else
+				email_node_degree.insert(make_pair(int_node1, 1));
 		}
 	}
 	input_file.close();
 
+	// finding min and max degrees of email graph
+	int min_email_degree = INFINITY, max_email_degree = -INFINITY;
+	for(int i=1; i<=email_node_size; i++)
+	{
+		auto it = email_node_degree.find(i);
+		// exists
+		if(it != email_node_degree.end())
+		{
+			if(it->second > max_email_degree)	max_email_degree = it->second;
+			if(it->second < min_email_degree)	min_email_degree = it->second;
+		}
+		// does not exist
+		else
+		{
+			if(0 > max_email_degree)	max_email_degree = 0;
+			if(0 < min_email_degree)	min_email_degree = 0;
+		}
+	}
+
+//	cout << "call node degree\n";
+//	for(auto i=call_node_degree.begin(); i != call_node_degree.end(); i++)
+//		cout << i->first << ": " << i->second << endl;
+//	cout << "email nodes degree\n";
+//	for(auto i=email_node_degree.begin(); i != email_node_degree.end(); i++)
+//		cout << i->first << ": " << i->second << endl;
+
+	// writing sizes into a file for later use
 	fstream size_file;
 	size_file.open("size.txt", ios::out);
 	if(!size_file)	{ cout << "error while creating file size.txt\n"; return 0;}
@@ -206,10 +281,11 @@ int main(int argc, char *argv[])
 			offset++;
 		}
 
+
 	// printing key and value
-	cout << "key to edge mappings: \n";
-	for(auto i=variable_to_node.begin(); i!=variable_to_node.end(); i++)
-		cout << i->first << " -> " << i->second.first << ", " << i->second.second << endl;
+//	cout << "key to edge mappings: \n";
+//	for(auto i=variable_to_node.begin(); i!=variable_to_node.end(); i++)
+//		cout << i->first << " -> " << i->second.first << ", " << i->second.second << endl;
 	// printing edge to key mapping
 //	cout << "edge to key mappings: \n";
 //	for(int i=0; i<email_node_size; i++)
@@ -227,7 +303,7 @@ int main(int argc, char *argv[])
 //		cout << call_edges[i].first << " -> " << call_edges[i].second << endl;
 	//// writing clauses to filename.satinput
 	fstream satinput;
-	satinput.open(filename+".satinput", ios::out);
+	satinput.open(filename+".temp_satinput", std::fstream::in | std::fstream::out);
 	if(!satinput)	{ cout << "error while creating satinput file.\n"; return 0;}
 	
 	int total_variables = 	(email_node_size*email_node_size - email_node_size) +
@@ -236,12 +312,14 @@ int main(int argc, char *argv[])
 	    total_clauses   = 	(email_node_size*(email_node_size-1))+										// fact clauses
 		   		(call_node_size*(call_node_size-1))+										// fact clauses
 				(email_node_size*call_node_size*(call_node_size-1)) +								// one to many check
-				((2*email_node_size*email_node_size - 2*email_node_size)*permutation(call_node_size, email_node_size))+		// constraints
+				(call_node_size*email_node_size*(email_node_size-1)) +								// many to one check
+//				((2*email_node_size*email_node_size - 2*email_node_size)*permutation(call_node_size, email_node_size))+		// constraints
 				email_node_size;												// existance
-	string string_to_file="";
+	
+//	string string_to_file="";
 	// writing basic info
-	string_to_file = "p cnf " + to_string(total_variables) + " " + to_string(total_clauses);
-	satinput << string_to_file << endl;
+//	string_to_file = "p cnf " + to_string(total_variables) + " " + to_string(total_clauses);
+//	satinput << string_to_file << endl;
 
 	//// writing fact clauses
 	// writing email and call clauses
@@ -284,16 +362,21 @@ int main(int argc, char *argv[])
 	}
 	satinput<<"0\n";	
 	
-	//// writing one to many check clauses
+	//// writing one-one check clauses
 	// if i is mapped to p then i can not map to anything else than p
 	for(int i=0; i< email_node_size; i++)
 	{
 		for(int p=0; p< call_node_size; p++)
 		{
 			string base_clause = to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " ";
+			// one to many check
 			for(int q=0; q<call_node_size; q++)
 				if(q != p)
 					satinput << base_clause + to_string((-1)*edge_to_key(i, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+			// many to one check
+			for(int q=0; q<email_node_size; q++)
+				if(q != i)
+					satinput << base_clause + to_string((-1)*edge_to_key(q, p, email_node_size, call_node_size, MAPPING)) + " 0\n";
 		}
 	}
 
@@ -309,7 +392,7 @@ int main(int argc, char *argv[])
 	// selecting n elements out of m elements. n < m. mcn combinations.
 	vector<vector<int>> valid_mappings;
 	vector<int> temp_combination;
-	get_combinations(call_nodes, email_node_size, 0, valid_mappings, temp_combination);
+	get_combinations(call_nodes, email_node_size, 0, valid_mappings, temp_combination, min_email_degree, max_email_degree, call_node_degree);
 	int valid_mappings_size = valid_mappings.size();
 	for(int i=0; i<valid_mappings_size; i++)
 	{
@@ -330,11 +413,30 @@ int main(int argc, char *argv[])
 				int mapped_key = edge_to_key( a_permutation[map_i-1]-1, a_permutation[map_j-1]-1, email_node_size, call_node_size, CALL);
 				satinput << base_clause + to_string((-1)*j) + " " + to_string(mapped_key) + " 0\n";
 				satinput << base_clause + to_string(j) + " " + to_string((-1)*mapped_key) + " 0\n";
+				total_clauses += 2;
 			}
 		}
 		while(next_permutation(a_permutation.begin(), a_permutation.end()));
 	}
 
 	satinput.close();
+	
+	// coping all clauses to original file that has it's first line a basic info
+	fstream satinput_original;
+	satinput_original.open(filename+".satinput", ios::out);
+	satinput.open(filename+".temp_satinput", ios::in);
+
+	if(!satinput_original or !satinput)	{ cout <<"can not create " << filename << ".satinput file.\n"; return 0;}
+	string string_to_file="";
+	// writing basic info
+	satinput_original << "p cnf " + to_string(total_variables) + " " + to_string(total_clauses) << "\n";
+	satinput_original << satinput.rdbuf();
+	
+	satinput.close();
+	satinput_original.close();
+
+	cout << "total variables: " << total_variables << endl;
+	cout << "total clauses: " << total_clauses << endl;
+
 	return 0;
 }
