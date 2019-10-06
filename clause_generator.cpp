@@ -229,6 +229,7 @@ int main(int argc, char *argv[])
 				email_node_size*call_node_size,
 	    total_clauses   = 	(email_node_size*(email_node_size-1))+										// fact clauses
 		   		(call_node_size*(call_node_size-1))+										// fact clauses
+				(email_node_size*call_node_size*(call_node_size-1)) +								// one to many check
 				((2*email_node_size*email_node_size - 2*email_node_size)*permutation(call_node_size, email_node_size))+		// constraints
 				email_node_size;												// existance
 	string string_to_file="";
@@ -276,6 +277,21 @@ int main(int argc, char *argv[])
 		}
 	}
 	satinput<<"0\n";	
+	
+	//// writing one to many check clauses
+	// if i is mapped to p then i can not map to anything else than p
+	for(int i=0; i< email_node_size; i++)
+	{
+		for(int p=0; p< call_node_size; p++)
+		{
+			string base_clause = to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " ";
+			for(int q=0; q<call_node_size; q++)
+				if(q != p)
+					satinput << base_clause + to_string((-1)*edge_to_key(i, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+		}
+	}
+
+
 	//// writing constraints clauses.
 	// creating vector of int: node id of graphs
 	// both vectors are already in sorted order: increasing node ids
