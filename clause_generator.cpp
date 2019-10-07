@@ -115,9 +115,9 @@ int edge_to_key(int r, int c, int &email_node_size, int &call_node_size, literal
 			else		return email_node_size*(email_node_size-1) + r*call_node_size+ (c+1) - r - 1;
 			break;
 		case MAPPING:
-			if(c<r)		return call_node_size*(call_node_size-1) + email_node_size*(email_node_size-1) + r*call_node_size+ (c+1);
-			else		return call_node_size*(call_node_size-1) + email_node_size*(email_node_size-1) + r*call_node_size+ (c+1);
-			break;
+			return r*call_node_size+ (c+1);
+//			if(c<r)		return call_node_size*(call_node_size-1) + email_node_size*(email_node_size-1) + r*call_node_size+ (c+1);
+//			else		return call_node_size*(call_node_size-1) + email_node_size*(email_node_size-1) + r*call_node_size+ (c+1);
 	}
 }
 
@@ -133,7 +133,7 @@ pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size, l
 			return make_pair(-1, -1);
 		case MAPPING:
 			// total number of element in mapping matrix
-			int element_index = key - (email_node_size*(email_node_size-1) + call_node_size*(call_node_size-1));
+			int element_index = key; //- (email_node_size*(email_node_size-1) + call_node_size*(call_node_size-1));
 			// zero based indexing
 			int r, c;
 			c = (element_index-1) % call_node_size;
@@ -263,32 +263,33 @@ int main(int argc, char *argv[])
 //		cout << i->first << ": " << i->second << endl;
 
 	// writing sizes into a file for later use
-	fstream size_file;
-	size_file.open("size.txt", ios::out);
-	if(!size_file)	{ cout << "error while creating file size.txt\n"; return 0;}
-	size_file << email_node_size << endl << call_node_size << endl;
-	size_file.close();
+//	fstream size_file;
+//	size_file.open("size.txt", ios::out);
+//	if(!size_file)	{ cout << "error while creating file size.txt\n"; return 0;}
+//	size_file << email_node_size << endl << call_node_size << endl;
+//	size_file.close();
 
 	//// creating map to refer node id wrt the variable index
-	map<int, pair<int, int>> variable_to_node;
+	map<int, pair<int, int>> variable_to_node, all_possible_email_edges;
 	int offset=1;
 	// email edge variables: eij
 	for(int i=0; i<email_node_size; i++)
 		for(int j=0; j<email_node_size; j++)
 			if(i!=j)
 			{
-				variable_to_node.insert(make_pair(offset, make_pair(i+1, j+1)));
+				all_possible_email_edges.insert(make_pair(offset, make_pair(i+1, j+1)));
 				offset++;
 			}
 	// call edge variables: cij
-	for(int i=0; i<call_node_size; i++)
-		for(int j=0; j<call_node_size; j++)
-			if(i!=j)
-			{
-				variable_to_node.insert(make_pair(offset, make_pair(i+1, j+1)));
-				offset++;
-			}
+//	for(int i=0; i<call_node_size; i++)
+//		for(int j=0; j<call_node_size; j++)
+//			if(i!=j)
+//			{
+//				variable_to_node.insert(make_pair(offset, make_pair(i+1, j+1)));
+//				offset++;
+//			}
 	// mapping variables: mij
+	offset = 1;
 	for(int i=0; i<email_node_size; i++)
 		for(int j=0; j<call_node_size; j++)
 		{
@@ -321,8 +322,9 @@ int main(int argc, char *argv[])
 	satinput.open(filename+".temp_satinput", std::fstream::out);
 	if(!satinput)	{ cout << "error while creating satinput file.\n"; return 0;}
 	
-	int total_variables = 	(email_node_size*email_node_size - email_node_size) +
-				(call_node_size*call_node_size - call_node_size) +
+	int total_variables = 	
+//				(email_node_size*email_node_size - email_node_size) +
+//				(call_node_size*call_node_size - call_node_size) +
 				email_node_size*call_node_size,
 	    total_clauses   = 	
 //		    		(email_node_size*(email_node_size-1))+										// fact clauses
@@ -361,8 +363,9 @@ int main(int argc, char *argv[])
 //		else	break;
 //	}
 	//adding existence clause to satinput
-	int temp=(email_node_size*email_node_size - email_node_size) + (call_node_size*call_node_size - call_node_size), count=0;
-	for(int i=temp;i<variable_to_node.size();i++)
+//	int temp=(email_node_size*email_node_size - email_node_size) + (call_node_size*call_node_size - call_node_size), count=0;
+	int count=0;
+	for(int i=0; i<variable_to_node.size();i++)
 	{
 		if(count<call_node_size)
 		{
@@ -429,11 +432,11 @@ int main(int argc, char *argv[])
 				for(int j=1; j<=temp_counter; j++)
 				{
 					// map_i, map_j: edges of email graph
-					int map_i = variable_to_node.at(j).first, map_j = variable_to_node.at(j).second;
+					int map_i = all_possible_email_edges.at(j).first, map_j = all_possible_email_edges.at(j).second;
 					// a_permutation[map_i-1], a_permutation[map_j-1]: edges of call grpahs
-					pair<int, int> email_edge = make_pair(a_permutation[map_i-1], a_permutation[map_j-1]);
-					bool is_email_edge = edge_search(email_edges, variable_to_node.at(j), 0, email_node_size-1),
-					     is_call_edge = edge_search(call_edges, email_edge, 0, call_node_size-1);
+					pair<int, int> 	call_edge = make_pair(a_permutation[map_i-1], a_permutation[map_j-1]);
+					bool is_email_edge = edge_search(email_edges, all_possible_email_edges.at(j), 0, email_node_size-1),
+					     is_call_edge = edge_search(call_edges, call_edge, 0, call_node_size-1);
 					
 					// consistant
 					if(is_email_edge and is_call_edge){}
