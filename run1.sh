@@ -1,2 +1,2 @@
 # run only clause generator
-./clause_generator test
+./clause_generator $1

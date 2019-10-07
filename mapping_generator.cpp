@@ -12,25 +12,15 @@ using namespace std;
 
 typedef enum {EMAIL, CALL, MAPPING} literal_type;
 
-pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size, literal_type l_type)
+pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size)
 {
-	switch(l_type)
-	{
-		case EMAIL:
-			cout << "**** not implemented *****\n";
-			return make_pair(-1, -1);
-		case CALL:
-			cout << "**** not implemented *****\n";
-			return make_pair(-1, -1);
-		case MAPPING:
-			// total number of element in mapping matrix
-			int element_index = key - (email_node_size*(email_node_size-1) + call_node_size*(call_node_size-1));
-			// zero based indexing
-			int r, c;
-			c = (element_index-1) % call_node_size;
-			r = (element_index-c-1) / call_node_size;
-			return make_pair(r+1, c+1);
-	}
+	// total number of element in mapping matrix
+	int element_index = key; //- (email_node_size*(email_node_size-1) + call_node_size*(call_node_size-1));
+	// zero based indexing
+	int r, c;
+	c = (element_index-1) % call_node_size;
+	r = (element_index-c-1) / call_node_size;
+	return make_pair(r+1, c+1);
 }
 
 int main(int argc, char *argv[])
@@ -72,7 +62,7 @@ int main(int argc, char *argv[])
         istringstream ss(str);
         
         // Traverse through all words
-        int counter=0;
+  //      int counter=0;
         ofstream mappingf;
         mappingf.open(mapping_filename);
         if(!mappingf)    { cout << "error while creating mapping file.\n"; return 0;}
@@ -88,16 +78,16 @@ int main(int argc, char *argv[])
             // Print the read word
 //            if(ss!=0)
 //            {
-                counter++;
-                if(counter>=(call_node_size*(call_node_size-1)+email_node_size*(email_node_size-1)+1))
-                {
+//                counter++;
+//                if(counter>=(call_node_size*(call_node_size-1)+email_node_size*(email_node_size-1)+1))
+  //              {
                     if((word[0]!='-')&&(word!="0"))
                     {
                         int key=stoi(word);
-                        pair<int,int> temp=key_to_edge(key,email_node_size,call_node_size,MAPPING);
+                        pair<int,int> temp=key_to_edge(key,email_node_size,call_node_size);
                         mappingf << to_string(temp.first) + " " + to_string(temp.second) +"\n";
                     }
-                }
+//                }
 //            }
             // While there is more to read
         }

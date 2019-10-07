@@ -1,1 +1,1 @@
-./mapping_generator test
+./mapping_generator $1

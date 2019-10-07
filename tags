@@ -17,7 +17,7 @@ G2nodes	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py
 get_combinations	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^void get_combinations(	vector<int> &numbers, int selection_size, int offset, vector<vector<int>> &combinations, vector<int> temp_combination,$/;"	f	language:C++
 guarantee_subgraph	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^guarantee_subgraph = True  # whether to deliberately make G2 a subgraph of G1$/;"	v	language:Python
 key_to_edge	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size, literal_type l_type)$/;"	f	language:C++
-key_to_edge	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/mapping_generator.cpp	/^pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size, literal_type l_type)$/;"	f	language:C++
+key_to_edge	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/mapping_generator.cpp	/^pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size)$/;"	f	language:C++
 literal_type	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^typedef enum {EMAIL, CALL, MAPPING} literal_type;$/;"	t	language:C++	typeref:enum:__anon1	file:
 literal_type	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/mapping_generator.cpp	/^typedef enum {EMAIL, CALL, MAPPING} literal_type;$/;"	t	language:C++	typeref:enum:__anon1	file:
 main	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^int main(int argc, char *argv[])$/;"	f	language:C++

@@ -62,34 +62,34 @@ void get_combinations(	vector<int> &numbers, int selection_size, int offset, vec
 	{
 		//// check if such a combination is feasible or not
 		// getting min and max calling node degrees
-		int min_call_degree = INFINITY, max_call_degree = -INFINITY, email_node_size = temp_combination.size();
-		for(int i=0; i< email_node_size; i++)
-		{
-			auto it = call_node_degree.find(temp_combination[i]);
+//		int min_call_degree = INFINITY, max_call_degree = -INFINITY, email_node_size = temp_combination.size();
+//		for(int i=0; i< email_node_size; i++)
+//		{
+//			auto it = call_node_degree.find(temp_combination[i]);
 			// element is there
-			if(it != call_node_degree.end())
-			{
-				if(it->second > max_call_degree)	max_call_degree = it->second;
-				if(it->second < min_call_degree)	min_call_degree = it->second;
-			}
+//			if(it != call_node_degree.end())
+//			{
+//				if(it->second > max_call_degree)	max_call_degree = it->second;
+//				if(it->second < min_call_degree)	min_call_degree = it->second;
+//			}
 			// element is not there
-			else
-			{
-				min_call_degree = 0;
-				if(max_call_degree < 0)			max_call_degree = 0;
-			}
-		}
+//			else
+//			{
+//				min_call_degree = 0;
+//				if(max_call_degree < 0)			max_call_degree = 0;
+//			}
+//		}
 		// check redundent clauses
-		if(min_call_degree >= min_email_degree and max_call_degree >= max_email_degree)
+//		if(min_call_degree >= min_email_degree and max_call_degree >= max_email_degree)
 			combinations.push_back(temp_combination);
-		else
-		{
-			cout << "it is helping...\n";
-			cout << "email degrees: " << min_email_degree << ", " << max_email_degree << endl;
-			cout << "call degrees: " << min_call_degree << ", " << max_call_degree << endl;
-			for(int i=0; i<email_node_size; i++)	cout << temp_combination[i];
-			cout << endl;
-		}
+//		else
+//		{
+//			cout << "it is helping...\n";
+//			cout << "email degrees: " << min_email_degree << ", " << max_email_degree << endl;
+//			cout << "call degrees: " << min_call_degree << ", " << max_call_degree << endl;
+//			for(int i=0; i<email_node_size; i++)	cout << temp_combination[i];
+//			cout << endl;
+//		}
 		return;	
 	}
 	int digits = numbers.size();
@@ -255,19 +255,19 @@ int main(int argc, char *argv[])
 		}
 	}
 
-//	cout << "call node degree\n";
-//	for(auto i=call_node_degree.begin(); i != call_node_degree.end(); i++)
-//		cout << i->first << ": " << i->second << endl;
-//	cout << "email nodes degree\n";
-//	for(auto i=email_node_degree.begin(); i != email_node_degree.end(); i++)
-//		cout << i->first << ": " << i->second << endl;
+	cout << "call node degree\n";
+	for(auto i=call_node_degree.begin(); i != call_node_degree.end(); i++)
+		cout << i->first << ": " << i->second << endl;
+	cout << "email nodes degree\n";
+	for(auto i=email_node_degree.begin(); i != email_node_degree.end(); i++)
+		cout << i->first << ": " << i->second << endl;
 
 	// writing sizes into a file for later use
-//	fstream size_file;
-//	size_file.open("size.txt", ios::out);
-//	if(!size_file)	{ cout << "error while creating file size.txt\n"; return 0;}
-//	size_file << email_node_size << endl << call_node_size << endl;
-//	size_file.close();
+	fstream size_file;
+	size_file.open("size.txt", ios::out);
+	if(!size_file)	{ cout << "error while creating file size.txt\n"; return 0;}
+	size_file << email_node_size << endl << call_node_size << endl;
+	size_file.close();
 
 	//// creating map to refer node id wrt the variable index
 	map<int, pair<int, int>> variable_to_node, all_possible_email_edges;
@@ -457,6 +457,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
+				
 				string base_clause="";
 				// constraint clause for a mapping under consideration
 				for(int j=0; j<email_node_size; j++)
@@ -464,9 +465,9 @@ int main(int argc, char *argv[])
 				satinput << base_clause + "0\n";
 				total_clauses ++;
 
-				cout << "it helped...\n";
-				for(int i=0; i<email_node_size; i++)	cout << a_permutation[i];
-				cout << endl;
+//				cout << "it helped...\n";
+//				for(int i=0; i<email_node_size; i++)	cout << a_permutation[i];
+//				cout << endl;
 			}
 		}
 		while(next_permutation(a_permutation.begin(), a_permutation.end()));
