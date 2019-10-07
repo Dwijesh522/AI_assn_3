@@ -3,6 +3,7 @@ AddNode	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py
 allow_self_edges	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^allow_self_edges = False  # if true, a node can have an edge to itself$/;"	v	language:Python
 CALL	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^typedef enum {EMAIL, CALL, MAPPING} literal_type;$/;"	e	language:C++	enum:__anon1	file:
 CALL	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/mapping_generator.cpp	/^typedef enum {EMAIL, CALL, MAPPING} literal_type;$/;"	e	language:C++	enum:__anon1	file:
+degree_check	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^bool degree_check(vector<int> &a_mapping, map<int, int> &email_node_degree, map<int, int> &call_node_degree)$/;"	f	language:C++
 do_xform	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/graph_generator.py	/^do_xform = True # Sachin: Remove isolated nodes from Graphs$/;"	v	language:Python
 edge_comparator	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^bool edge_comparator(pair<int, int> edge1, pair<int, int> edge2)$/;"	f	language:C++
 edge_search	/home/dwijesh/Documents/sem5/ai/assns/assn3/AI_assn_3/clause_generator.cpp	/^bool edge_search(vector<pair<int, int>> &edges, pair<int, int> &query_edge, int start, int end)$/;"	f	language:C++
