@@ -393,12 +393,23 @@ int main(int argc, char *argv[])
 //		else	break;
 //	}
 
-	// mapping isolated nodes with each other
+	// checking isolated node heuristics
 	int email_isolated_nodes_size = email_isolated_nodes.size(), call_isolated_nodes_size = call_isolated_nodes.size();	
+	if(email_isolated_nodes_size > call_isolated_nodes_size)
+	{
+		satinput.close();
+		satinput.open(filename+".satinput", std::fstream::out);
+		if(!satinput)	{ cout << "error while creating satinput file.\n"; return 0;}
+		satinput << "0\n";
+		satinput.close();
+		return 0;
+	}
+
+	// mapping isolated nodes with each other
 	for(int i=0; i<email_isolated_nodes_size and i<call_isolated_nodes_size; i++)
 	{
 		int i1 = email_isolated_nodes[i], i2 = call_isolated_nodes[i];
-		cout << "isolated nodes: " << i1 << " <--> " << i2 << endl;
+//		cout << "isolated nodes: " << i1 << " <--> " << i2 << endl;
 		string basic_clause = to_string(edge_to_key(i1-1, i2-1, email_node_size, call_node_size, MAPPING)) + " 0\n";
 		satinput << basic_clause;
 	}
