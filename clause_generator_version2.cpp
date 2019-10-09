@@ -174,7 +174,9 @@ int main(int argc, char *argv[])
 	bool zero_crossed=false;
 	vector<pair<int, int>> email_edges, call_edges;
 	// storing degree of each node
-	map<int, int> email_node_degree, call_node_degree;
+	map<int, int> email_node_degree, call_node_degree, email_node_in_degree, call_node_in_degree;
+	// isolated nodes
+	vector<int> email_isolated_nodes, call_isolated_nodes;
 
 	while(getline(input_file, edge))
 	{
@@ -199,13 +201,20 @@ int main(int argc, char *argv[])
 				// adding edge to call_edges for further use
 				call_edges.push_back(make_pair(int_node1, int_node2));
 				// modifing degree of int_node1
-				auto it = call_node_degree.find(int_node1);
+				auto it = call_node_degree.find(int_node1), it2 = call_node_in_degree.find(int_node2);
 				// element exists
 				if(it != call_node_degree.end())
 					it->second = (it->second) +1;
 				// element does not exist
 				else
 					call_node_degree.insert(make_pair(int_node1, 1));
+
+				// element exists
+				if(it2 != call_node_in_degree.end())
+					it2->second = (it2->second) + 1;
+				// element does not exist
+				else
+					call_node_in_degree.insert(make_pair(int_node2, 1));
 			}
 		}
 		// email edges
@@ -223,22 +232,29 @@ int main(int argc, char *argv[])
 			// adding edge to call_edges for further use
 			email_edges.push_back(make_pair(int_node1, int_node2));
 			// modifing degree of int_node1
-			auto it = email_node_degree.find(int_node1);
+			auto it = email_node_degree.find(int_node1), it2 = email_node_in_degree.find(int_node2);
 			// element exists
 			if(it != email_node_degree.end())
 				it->second = (it->second) +1;
 			// element does not exist
 			else
 				email_node_degree.insert(make_pair(int_node1, 1));
+			// element exists
+			if(it2 != email_node_in_degree.end())
+				it2->second = (it2->second) +1;
+			// element does not exist
+			else
+				email_node_in_degree.insert(make_pair(int_node2, 1));
 		}
 	}
 	input_file.close();
+
 
 	// finding min and max degrees of email graph
 	int min_email_degree = INFINITY, max_email_degree = -INFINITY;
 	for(int i=1; i<=email_node_size; i++)
 	{
-		auto it = email_node_degree.find(i);
+		auto it = email_node_degree.find(i), it2 = email_node_in_degree.find(i);
 		// exists
 		if(it != email_node_degree.end())
 		{
@@ -251,7 +267,20 @@ int main(int argc, char *argv[])
 			if(0 > max_email_degree)	max_email_degree = 0;
 			if(0 < min_email_degree)	min_email_degree = 0;
 		}
+
+		// checking isolated email node
+		// element having 0 in and out degree
+		if(it == email_node_degree.end() and it2 == email_node_in_degree.end())
+			email_isolated_nodes.push_back(i);
 	}
+	// finding isolated call nodes
+	for(int i=1; i<=call_node_size; i++)
+	{
+		auto it1 = call_node_degree.find(i), it2 = call_node_in_degree.find(i);
+		// element having 0 in and out degree
+		if(it1 == call_node_degree.end() and it2 == call_node_in_degree.end())
+			call_isolated_nodes.push_back(i);
+	}	
 
 //	cout << "call node degree\n";
 //	for(auto i=call_node_degree.begin(); i != call_node_degree.end(); i++)
@@ -363,6 +392,18 @@ int main(int argc, char *argv[])
 		// constraint edges: mappings(mij)
 //		else	break;
 //	}
+
+	// mapping isolated nodes with each other
+	int email_isolated_nodes_size = email_isolated_nodes.size(), call_isolated_nodes_size = call_isolated_nodes.size();	
+	for(int i=0; i<email_isolated_nodes_size and i<call_isolated_nodes_size; i++)
+	{
+		int i1 = email_isolated_nodes[i], i2 = call_isolated_nodes[i];
+		cout << "isolated nodes: " << i1 << " <--> " << i2 << endl;
+		string basic_clause = to_string(edge_to_key(i1-1, i2-1, email_node_size, call_node_size, MAPPING)) + " 0\n";
+		satinput << basic_clause;
+	}
+
+
 	//adding existence clause to satinput
 //	int temp=(email_node_size*email_node_size - email_node_size) + (call_node_size*call_node_size - call_node_size), count=0;
 	
