@@ -143,18 +143,15 @@ pair<int, int> key_to_edge(int key, int &email_node_size, int &call_node_size, l
 }
 
 // check if each mapped node is valid or not using degree of corresponding nodes
-bool degree_check(vector<int> &a_mapping, map<int, int> &email_node_degree, map<int, int> &call_node_degree)
+// i -> p
+// 1 based indexing for i and p
+bool degree_check(int email_node_index, int call_node_index, map<int, int> &email_node_degree, map<int, int> &call_node_degree)
 {
-	int email_node_size = a_mapping.size();
-	for(int i=1; i<=email_node_size; i++)
-	{
-		auto it1 = call_node_degree.find(a_mapping[i-1]), it2 = email_node_degree.find(i), end1 = call_node_degree.end(), end2 = email_node_degree.end();
-		if(it1 != end1 and it2 != end2 and it1->second < it2->second)		return false;
-		else if(it1 != end1 and it2 == end2)					{}
-		else if(it1 == end1 and it2 != end2)					return false;
-		else									{}
-	}
-	return true;
+	auto it1 = call_node_degree.find(call_node_index), it2 = email_node_degree.find(email_node_index), end1 = call_node_degree.end(), end2 = email_node_degree.end();
+	if(it1 != end1 and it2 != end2 and it1->second < it2->second)		return false;
+	else if(it1 != end1 and it2 == end2)					return true;
+	else if(it1 == end1 and it2 != end2)					return false;
+	else									return true;
 }
 
 int main(int argc, char *argv[])
@@ -409,83 +406,145 @@ int main(int argc, char *argv[])
 
 	cout << "writing one one check clauses done\n";
 
+	// writing optimized constraint clauses
+	for(int i=0; i<email_node_size; i++)
+	{
+		for(int p=0; p<call_node_size; p++)
+		{
+			// degree heuristics: degree(p) >= degree(i) else ignore all such clauses
+			if(not degree_check(i+1, p+1, email_node_degree, call_node_degree))	
+			{
+				cout << i+1 << " can not be mapped with " << p+1 << endl; 
+				string base_clause = to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " 0\n";
+				satinput << base_clause;
+				total_clauses++;
+				continue;
+			}
+
+			for(int j=i+1; j<email_node_size; j++)
+			{
+				for(int q=0; q<call_node_size; q++)
+				{
+					if(q != p)
+					{
+						
+						// degree heuristics: degree(p) >= degree(i) else ignore all such clauses
+						if(not degree_check(j+1, q+1, email_node_degree, call_node_degree)) 
+						{ 
+							string base_clause = to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+							satinput << base_clause;
+							total_clauses++;
+							cout << j+1 << " can't be mapped with " << q+1 << endl; 
+							continue;
+						}
+						
+						// mip ^ mjq -> (eij  <--> cpq) ^ (eji <--> cqp)
+						// i -> p and j -> q
+						int email_edges_size = email_edges.size(), call_edges_size = call_edges.size();
+						bool eij, cpq, eji, cqp;
+						pair<int, int> email_edge_f = make_pair(i+1, j+1), call_edge_f = make_pair(p+1, q+1);
+						pair<int, int> email_edge_b = make_pair(j+1, i+1), call_edge_b = make_pair(q+1, p+1);
+						eij = edge_search(email_edges, email_edge_f, 0, email_edges_size-1);
+						cpq = edge_search(call_edges, call_edge_f, 0, call_edges_size-1);
+						eji = edge_search(email_edges, email_edge_b, 0, email_edges_size-1);
+						cqp = edge_search(call_edges, call_edge_b, 0, call_edges_size-1);
+						//// checking consistancy: (eij  <--> cpq) ^ (eji <--> cqp) 
+						// consistant: ignore
+						if( ((eij and cpq) or ((not eij) and (not cpq))) and ((eji and cqp) or ((not eji) and (not cqp))) ){}
+						// not consistant
+						else
+						{
+							total_clauses++;
+							string base_clause = 	to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " " +
+										to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+							satinput << base_clause;
+						}
+					}
+				}
+			}
+		}
+	}
+
+
 	//// writing constraints clauses.
 	// creating vector of int: node id of graphs
 	// both vectors are already in sorted order: increasing node ids
 	// also all elements are unique
-	vector<int> email_nodes, call_nodes;
-	for(int i=0; i<email_node_size; i++)	email_nodes.push_back(i+1);
-	for(int i=0; i<call_node_size; i++)	call_nodes.push_back(i+1);
+//	vector<int> email_nodes, call_nodes;
+//	for(int i=0; i<email_node_size; i++)	email_nodes.push_back(i+1);
+//	for(int i=0; i<call_node_size; i++)	call_nodes.push_back(i+1);
+
 	
+
 	// selecting n elements out of m elements. n < m. mcn combinations.
-	vector<vector<int>> valid_mappings;
-	vector<int> temp_combination;
-	cout << "getting combinations...\n";
-	get_combinations(call_nodes, email_node_size, 0, valid_mappings, temp_combination, min_email_degree, max_email_degree, call_node_degree);
-	cout << "got the combinations\n";
-	cout << "started writing constraint clauses\n";
-	int valid_mappings_size = valid_mappings.size();
-	for(int i=0; i<valid_mappings_size; i++)
-	{
-		// extracting a permuatation
-		vector<int> a_permutation = valid_mappings[i];
-		// getting subset of mapping
-		do
-		{
-			if(degree_check(a_permutation, email_node_degree, call_node_degree))
-			{
-				string base_clause="";
-				// constraint clause for a mapping under consideration
-				for(int j=0; j<email_node_size; j++)
-					base_clause += to_string((-1)*edge_to_key(j, a_permutation[j]-1, email_node_size, call_node_size, MAPPING)) + " ";
-				base_clause += "0\n";
-				// temp_counter := number of all possible valid email edges
-				int temp_counter = email_node_size*(email_node_size-1);
-				for(int j=1; j<=temp_counter; j++)
-				{
-					// map_i, map_j: edges of email graph
-					int map_i = all_possible_email_edges.at(j).first, map_j = all_possible_email_edges.at(j).second;
-					// a_permutation[map_i-1], a_permutation[map_j-1]: edges of call grpahs
-					pair<int, int> 	call_edge = make_pair(a_permutation[map_i-1], a_permutation[map_j-1]);
-					bool is_email_edge = edge_search(email_edges, all_possible_email_edges.at(j), 0, email_node_size-1),
-					     is_call_edge = edge_search(call_edges, call_edge, 0, call_node_size-1);
-					
-					// consistant
-					if(is_email_edge and is_call_edge){}
-					// consistant
-					else if((not is_email_edge) and (not is_call_edge)){}
-					// in-consistant
-					else
-					{
-						satinput << base_clause;
-						total_clauses++;
-					}
-
-					//int mapped_key = edge_to_key( a_permutation[map_i-1]-1, a_permutation[map_j-1]-1, email_node_size, call_node_size, CALL);
-//					satinput << base_clause + to_string((-1)*j) + " " + to_string(mapped_key) + " 0\n";
-//					satinput << base_clause + to_string(j) + " " + to_string((-1)*mapped_key) + " 0\n";
-//					total_clauses += 2;
-				}
-			}
-			else
-			{
-				
-				string base_clause="";
-				// constraint clause for a mapping under consideration
-				for(int j=0; j<email_node_size; j++)
-					base_clause += to_string((-1)*edge_to_key(j, a_permutation[j]-1, email_node_size, call_node_size, MAPPING)) + " ";
-				satinput << base_clause + "0\n";
-				total_clauses ++;
-
-//				cout << "it helped...\n";
-//				for(int i=0; i<email_node_size; i++)	cout << a_permutation[i];
-//				cout << endl;
-			}
-		}
-		while(next_permutation(a_permutation.begin(), a_permutation.end()));
-	}
-	
-	cout << "writing constraint clauses done...\n";
+//	vector<vector<int>> valid_mappings;
+//	vector<int> temp_combination;
+//	cout << "getting combinations...\n";
+//	get_combinations(call_nodes, email_node_size, 0, valid_mappings, temp_combination, min_email_degree, max_email_degree, call_node_degree);
+//	cout << "got the combinations\n";
+//	cout << "started writing constraint clauses\n";
+//	int valid_mappings_size = valid_mappings.size();
+//	for(int i=0; i<valid_mappings_size; i++)
+//	{
+//		// extracting a permuatation
+//		vector<int> a_permutation = valid_mappings[i];
+//		// getting subset of mapping
+//		do
+//		{
+//			if(degree_check(a_permutation, email_node_degree, call_node_degree))
+//			{
+//				string base_clause="";
+//				// constraint clause for a mapping under consideration
+//				for(int j=0; j<email_node_size; j++)
+//					base_clause += to_string((-1)*edge_to_key(j, a_permutation[j]-1, email_node_size, call_node_size, MAPPING)) + " ";
+//				base_clause += "0\n";
+//				// temp_counter := number of all possible valid email edges
+//				int temp_counter = email_node_size*(email_node_size-1);
+//				for(int j=1; j<=temp_counter; j++)
+//				{
+//					// map_i, map_j: edges of email graph
+//					int map_i = all_possible_email_edges.at(j).first, map_j = all_possible_email_edges.at(j).second;
+//					// a_permutation[map_i-1], a_permutation[map_j-1]: edges of call grpahs
+//					pair<int, int> 	call_edge = make_pair(a_permutation[map_i-1], a_permutation[map_j-1]);
+//					bool is_email_edge = edge_search(email_edges, all_possible_email_edges.at(j), 0, email_node_size-1),
+//					     is_call_edge = edge_search(call_edges, call_edge, 0, call_node_size-1);
+//					
+//					// consistant
+//					if(is_email_edge and is_call_edge){}
+//					// consistant
+//					else if((not is_email_edge) and (not is_call_edge)){}
+//					// in-consistant
+//					else
+//					{
+//						satinput << base_clause;
+//						total_clauses++;
+//					}
+//
+//					//int mapped_key = edge_to_key( a_permutation[map_i-1]-1, a_permutation[map_j-1]-1, email_node_size, call_node_size, CALL);
+////					satinput << base_clause + to_string((-1)*j) + " " + to_string(mapped_key) + " 0\n";
+////					satinput << base_clause + to_string(j) + " " + to_string((-1)*mapped_key) + " 0\n";
+////					total_clauses += 2;
+//				}
+//			}
+//			else
+//			{
+//				
+//				string base_clause="";
+//				// constraint clause for a mapping under consideration
+//				for(int j=0; j<email_node_size; j++)
+//					base_clause += to_string((-1)*edge_to_key(j, a_permutation[j]-1, email_node_size, call_node_size, MAPPING)) + " ";
+//				satinput << base_clause + "0\n";
+//				total_clauses ++;
+//
+////				cout << "it helped...\n";
+////				for(int i=0; i<email_node_size; i++)	cout << a_permutation[i];
+////				cout << endl;
+//			}
+//		}
+//		while(next_permutation(a_permutation.begin(), a_permutation.end()));
+//	}
+//	
+//	cout << "writing constraint clauses done...\n";
 
 
 	satinput.close();
