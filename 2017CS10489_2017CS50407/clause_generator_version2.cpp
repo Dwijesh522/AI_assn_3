@@ -6,6 +6,7 @@
 #include<vector>
 #include<map>
 #include<algorithm>
+#include<sstream>
 using namespace std;
 
 typedef enum {EMAIL, CALL, MAPPING} literal_type;
@@ -348,9 +349,9 @@ int main(int argc, char *argv[])
 //	for(int i=0; i<call_edges.size(); i++)
 //		cout << call_edges[i].first << " -> " << call_edges[i].second << endl;
 	//// writing clauses to filename.satinput
-	fstream satinput;
-	satinput.open(filename+".temp_satinput", std::fstream::out);
-	if(!satinput)	{ cout << "error while creating satinput file.\n"; return 0;}
+//	fstream satinput;
+//	satinput.open(filename+".temp_satinput", std::fstream::out);
+//	if(!satinput)	{ cout << "error while creating satinput file.\n"; return 0;}
 	
 	int total_variables =
 //				(email_node_size*email_node_size - email_node_size) +
@@ -397,21 +398,25 @@ int main(int argc, char *argv[])
 	int email_isolated_nodes_size = email_isolated_nodes.size(), call_isolated_nodes_size = call_isolated_nodes.size();	
 	if(email_isolated_nodes_size > call_isolated_nodes_size)
 	{
-		satinput.close();
+		fstream satinput;
 		satinput.open(filename+".satinput", std::fstream::out);
 		if(!satinput)	{ cout << "error while creating satinput file.\n"; return 0;}
 		satinput << "0\n";
 		satinput.close();
 		return 0;
 	}
-
+//	string basic_clause="";
+	ostringstream basic_clause;
 	// mapping isolated nodes with each other
 	for(int i=0; i<email_isolated_nodes_size and i<call_isolated_nodes_size; i++)
 	{
 		int i1 = email_isolated_nodes[i], i2 = call_isolated_nodes[i];
 //		cout << "isolated nodes: " << i1 << " <--> " << i2 << endl;
-		string basic_clause = to_string(edge_to_key(i1-1, i2-1, email_node_size, call_node_size, MAPPING)) + " 0\n";
-		satinput << basic_clause;
+//		string basic_clause = to_string(edge_to_key(i1-1, i2-1, email_node_size, call_node_size, MAPPING)) + " 0\n";
+//		basic_clause += to_string(edge_to_key(i1-1, i2-1, email_node_size, call_node_size, MAPPING)) + " 0\n";
+		basic_clause << (edge_to_key(i1-1, i2-1, email_node_size, call_node_size, MAPPING)) << " 0\n";
+		total_clauses++;
+//		satinput << basic_clause;
 	}
 
 
@@ -424,17 +429,23 @@ int main(int argc, char *argv[])
 	{
 		if(count<call_node_size)
 		{
-			satinput<<to_string(i+1)+" ";
+//			basic_clause += to_string(i+1)+" ";
+			basic_clause << (i+1) << " ";
+//			satinput<<to_string(i+1)+" ";
 			count++;
 		}
 		else
 		{
 			count=0;
-			satinput<<"0\n";
+//			basic_clause += "0\n";
+			basic_clause << "0\n";
+//			satinput<<"0\n";
 			i--;
 		}
 	}
-	satinput<<"0\n";	
+//	basic_clause += "0\n";
+	basic_clause << "0\n";
+//	satinput<<"0\n";	
 	
 //	cout << "existance clauses done\n";
 
@@ -444,15 +455,18 @@ int main(int argc, char *argv[])
 	{
 		for(int p=0; p< call_node_size; p++)
 		{
-			string base_clause = to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " ";
+			string basic_clause_1 = to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " ";
 			// one to many check
 			for(int q=0; q<call_node_size; q++)
 				if(q != p)
-					satinput << base_clause + to_string((-1)*edge_to_key(i, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+					basic_clause << basic_clause_1 << ((-1)*edge_to_key(i, q, email_node_size, call_node_size, MAPPING)) << " 0\n";
+//					basic_clause += basic_clause_1 + to_string((-1)*edge_to_key(i, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+//					satinput << base_clause + to_string((-1)*edge_to_key(i, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
 			// many to one check
 			for(int q=0; q<email_node_size; q++)
 				if(q != i)
-					satinput << base_clause + to_string((-1)*edge_to_key(q, p, email_node_size, call_node_size, MAPPING)) + " 0\n";
+					basic_clause <<  basic_clause_1 << ((-1)*edge_to_key(q, p, email_node_size, call_node_size, MAPPING)) << " 0\n";
+//					satinput << base_clause + to_string((-1)*edge_to_key(q, p, email_node_size, call_node_size, MAPPING)) + " 0\n";
 		}
 	}
 
@@ -467,8 +481,9 @@ int main(int argc, char *argv[])
 			if(not degree_check(i+1, p+1, email_node_degree, call_node_degree))	
 			{
 //				cout << i+1 << " can not be mapped with " << p+1 << endl; 
-				string base_clause = to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " 0\n";
-				satinput << base_clause;
+//				string base_clause = to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " 0\n";
+				basic_clause << ((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) << " 0\n";
+//				satinput << base_clause;
 				total_clauses++;
 				continue;
 			}
@@ -483,8 +498,10 @@ int main(int argc, char *argv[])
 						// degree heuristics: degree(p) >= degree(i) else ignore all such clauses
 						if(not degree_check(j+1, q+1, email_node_degree, call_node_degree)) 
 						{ 
-							string base_clause = to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
-							satinput << base_clause;
+//							string base_clause = to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+							basic_clause << ((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) << " 0\n";
+//							basic_clause += to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+//							satinput << base_clause;
 							total_clauses++;
 //							cout << j+1 << " can't be mapped with " << q+1 << endl; 
 							continue;
@@ -507,9 +524,13 @@ int main(int argc, char *argv[])
 						else
 						{
 							total_clauses++;
-							string base_clause = 	to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " " +
-										to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
-							satinput << base_clause;
+//							string base_clause = 	to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " " +
+//										to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+							basic_clause << 	((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) << " " <<
+										((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) << " 0\n";
+//							basic_clause += 	to_string((-1)*edge_to_key(i, p, email_node_size, call_node_size, MAPPING)) + " " +
+//										to_string((-1)*edge_to_key(j, q, email_node_size, call_node_size, MAPPING)) + " 0\n";
+//							satinput << base_clause;
 						}
 					}
 				}
@@ -599,22 +620,23 @@ int main(int argc, char *argv[])
 //	cout << "writing constraint clauses done...\n";
 
 
-	satinput.close();
+//	satinput.close();
 	
 //	cout << "started coping one file to another...\n";
 
 	// coping all clauses to original file that has it's first line a basic info
 	fstream satinput_original;
 	satinput_original.open(filename+".satinput", ios::out);
-	satinput.open(filename+".temp_satinput", ios::in);
+//	satinput.open(filename+".temp_satinput", ios::in);
 
-	if(!satinput_original or !satinput)	{ cout <<"can not create " << filename << ".satinput file.\n"; return 0;}
+	if(!satinput_original)	{ cout <<"can not create " << filename << ".satinput file.\n"; return 0;}
 	string string_to_file="";
 	// writing basic info
 	satinput_original << "p cnf " + to_string(total_variables) + " " + to_string(total_clauses) << "\n";
-	satinput_original << satinput.rdbuf();
+	satinput_original << basic_clause.str();
+//	satinput_original << satinput.rdbuf();
 	
-	satinput.close();
+//	satinput.close();
 	satinput_original.close();
 
 //	cout << "coping of file done\n";
