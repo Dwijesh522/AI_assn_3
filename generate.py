@@ -19,7 +19,6 @@ G2edges = int(sys.argv[4]) # number of edges in smaller graph
 guarantee_subgraph = True  # whether to deliberately make G2 a subgraph of G1
 allow_self_edges = False  # if true, a node can have an edge to itself
 print_digraph = False # if True, print in graphviz format for visualization
-do_xform = True # Sachin: Remove isolated nodes from Graphs
 
 def makeGraph(nodeCount, edgeCount):
   if edgeCount > pow(nodeCount,2):
@@ -105,41 +104,6 @@ def printGraph(edges):
   for e in edges:
     print e[0], e[1]
 
-
-# Sachin: Transform graphs to remove the isolated nodes
-def AddNode(V,e):
-  if(e[0] not in V):
-    V.append(e[0])
-  if(e[1] not in V):
-    V.append(e[1])
-
-def ReplaceNode(G,n,n2):
-  for i in range(len(G)):
-    G[i] = (n2 if G[i][0]==n else G[i][0], n2 if G[i][1]==n else G[i][1])
-
-def xform(G):
-  V = []
-  for e in G:
-    AddNode(V,e)
-  V.sort()
-  V2 = []
-  idx = 1
-  for n in V:
-    while idx < n:
-      V2.append(idx)
-      idx += 1
-    idx += 1
-  # print 'Connected Nodes', V
-  # print 'Isolated  Nodes', V2
-  # Now replace the last nodes to isolated nodes
-  idx = len(V)-1
-  for n2 in V2:
-    n = V[idx]
-    if n < n2:
-      break
-    idx -= 1
-    ReplaceNode(G,n,n2)
-
 def main():
 
   G2 = makeGraph(G2nodes,G2edges)
@@ -148,12 +112,6 @@ def main():
     G2 = renameGraph(G2nodes,G2)
   else:   # G1 and G2 are both random graphs
     G1 = makeGraph(G1nodes,G1edges)
-
-  # Sachin: Transform graphs to remove the isolated nodes
-  if do_xform:
-    xform(G1)
-    xform(G2)
-
   if print_digraph:
     printSubgraphs(G1,G2)
   else:

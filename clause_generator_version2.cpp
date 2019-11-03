@@ -356,8 +356,8 @@ int main(int argc, char *argv[])
 	int total_variables =
 //				(email_node_size*email_node_size - email_node_size) +
 //				(call_node_size*call_node_size - call_node_size) +
-				email_node_size*call_node_size,
-	    total_clauses   = 	
+				email_node_size*call_node_size;
+	long long int total_clauses   = 	
 //		    		(email_node_size*(email_node_size-1))+										// fact clauses
 //		   		(call_node_size*(call_node_size-1))+										// fact clauses
 				(email_node_size*call_node_size*(call_node_size-1)) +								// one to many check
